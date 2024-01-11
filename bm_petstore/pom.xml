@@ -1,0 +1,84 @@
+<project>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>hu.bankmonitor.apis</groupId>
+  <artifactId>petstore</artifactId>
+  <version>1.0.6</version>
+  <packaging>jar</packaging>
+
+  <properties>
+    <openapi.input.file>${project.basedir}/bm_pets.yml</openapi.input.file>
+  </properties>
+
+  <dependencies>
+    <!-- SPRING GENERATOR DEPENDENCIES -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+      <version>2.4.4</version>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.springframework.data</groupId>
+      <artifactId>spring-data-jpa</artifactId>
+      <version>2.4.6</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.openapitools</groupId>
+      <artifactId>jackson-databind-nullable</artifactId>
+      <version>0.2.1</version>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-ui</artifactId>
+      <version>1.7.0</version>
+    </dependency>
+
+    <dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<version>1.18.30</version>
+		</dependency>
+
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.openapitools</groupId>
+        <artifactId>openapi-generator-maven-plugin</artifactId>
+        <version>7.2.0</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+            <configuration>
+              <inputSpec>${openapi.input.file}</inputSpec>
+              <generatorName>spring</generatorName>
+              <apiPackage>hu.bankmonitor.api.pets</apiPackage>
+              <modelPackage>hu.bankmonitor.api.pets</modelPackage>
+              <generateApiTests>false</generateApiTests>
+              <generateModelTests>false</generateModelTests>
+              <generateModelDocumentation>false</generateModelDocumentation>
+              <generateApiDocumentation>false</generateApiDocumentation>
+              <configOptions>
+                <interfaceOnly>true</interfaceOnly>
+                <additionalModelTypeAnnotations>@lombok.Builder @lombok.AllArgsConstructor</additionalModelTypeAnnotations>
+              </configOptions>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+  <distributionManagement>
+    <repository>
+      <id>bankmonitor-bm-apis</id>
+      <name>bankmonitor-bm-apis</name>
+      <url>${env.CODEARTIFACT_BASEURL}/maven/bm-apis/</url>
+    </repository>
+  </distributionManagement>
+</project>
