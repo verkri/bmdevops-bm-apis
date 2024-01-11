@@ -12,6 +12,7 @@ Az API modositasakor a kovetkezoket kell tenni:
 1. `bm_pets.yml` modositasa
 1. a `bm_pets.yml`, `pom.xml` es `package.json` -ban a `version` leptetese, szinkronizalasa
 1. a generalas elvegzese, ellenorzes:
+  - `npm run gen`
   - `mvn clean compile package`
 1. pull request es code-review
 1. a CI/CD automatikusan elkesziti a package kesziteset, teszteleset, breaking change detektalast, stb.
@@ -30,10 +31,10 @@ Manualisan a kovetkezokeppen tudjuk a package-t deployolni (felteve, hogy az AWS
 A package hasznalatahoz a kovetkezo dependency-t kell felvenni a `pom.xml`-be:
 
     <dependency>
-			<groupId>hu.bankmonitor.apis</groupId>
-			<artifactId>petstore</artifactId>
-			<version>1.0.6</version>
-		</dependency>
+      <groupId>hu.bankmonitor.apis</groupId>
+      <artifactId>petstore</artifactId>
+      <version>1.0.6</version>
+    </dependency>
 
 Ezen kivul a `settings.xml`-be kell felvenni a repository elereset:
 
@@ -68,6 +69,22 @@ Manualisan a kovetkezokeppen tudjuk publisholni a package-t:
 
     export CODEARTIFACT_AUTH_TOKEN=$(aws --profile leanflow codeartifact get-authorization-token --domain bankmonitor --query authorizationToken --output text)
     npm publish
+
+# NPM Pull
+
+Az `.npmrc`-be be kell allitani a repository elereset:
+
+    @bankmonitor:registry=https://bankmonitor-767398085282.d.codeartifact.us-east-1.amazonaws.com/npm/bm-apis/
+    //bankmonitor-767398085282.d.codeartifact.us-east-1.amazonaws.com/npm/bm-apis/:always-auth=true
+    //bankmonitor-767398085282.d.codeartifact.us-east-1.amazonaws.com/npm/bm-apis/:_authToken=${CODEARTIFACT_AUTH_TOKEN}
+
+Az authentikacio token lekerese:
+
+    export CODEARTIFACT_AUTH_TOKEN=$(aws --profile leanflow codeartifact get-authorization-token --domain bankmonitor --query authorizationToken --output text)
+
+NPM pull:
+
+    npm install @bankmonitor/petstore
 
 # CI / CD
 
