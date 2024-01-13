@@ -67,72 +67,44 @@ jobs:
           path: head
 
       - name: Check out master branch
+        # Run only if the file was modified (M)
+        if: ${{ contains(needs.get-affected-apis.outputs.modified, matrix.apifile) }}
         uses: actions/checkout@v4
         with:
           ref: master
           path: trunk
 
-      - name: Debug
-        run: |
-          echo "File is: ${{ matrix.apifile }} "
-          echo "affected: ${{ needs.get-affected-apis.outputs.affected }}"
-          echo "added: ${{ needs.get-affected-apis.outputs.added }}"
-          echo "deleted: ${{ needs.get-affected-apis.outputs.deleted }}"
-          echo "modified: ${{ needs.get-affected-apis.outputs.modified }}"
-          echo "contains(${{ join(needs.get-affected-apis.outputs.modified) }}, ${{ matrix.apifile }})"
-          echo "${{ contains(needs.get-affected-apis.outputs.modified, matrix.apifile) }}"
-
       - name: OpenAPI Validation
         # Skip validation if the file was deleted.
         if: ${{ ! contains(needs.get-affected-apis.outputs.deleted, matrix.apifile) }}
-        run: |
-          echo "Validating trunk/${{ matrix.apifile }}"
+        uses: char0n/swagger-editor-validate@v1
+        with:
+          definition-file: "head/${{ matrix.apifile }}"
 
       - name: OpeanAPI Diff
         # Run only if the file was modified (M)
         if: ${{ contains(needs.get-affected-apis.outputs.modified, matrix.apifile) }}
-        run: |
-          echo "Diffing trunk/${{ matrix.apifile }} vs head/${{ matrix.apifile }}"
+        uses: oasdiff/oasdiff-action/diff@main
+        with:
+          base: 'trunk/${{ matrix.apifile }}'
+          revision: 'head/${{ matrix.apifile }}'
+          fail-on-diff: false
+          format: yaml
 
       - name: Changelog Generation
         # Run only if the file was modified (M)
         if: ${{ contains(needs.get-affected-apis.outputs.modified, matrix.apifile) }}
-        run: |
-          echo "Changelog trunk/${{ matrix.apifile }} vs head/${{ matrix.apifile }}"
+        uses: oasdiff/oasdiff-action/changelog@main
+        continue-on-error: true
+        with:
+          base: 'trunk/${{ matrix.apifile }}'
+          revision: 'head/${{ matrix.apifile }}'
 
       - name: Breaking Change Detection
         # Run only if the file was modified (M)
         if: ${{ contains(needs.get-affected-apis.outputs.modified, matrix.apifile) }}
-        run: |
-          echo "Changelog trunk/${{ matrix.apifile }} vs head/${{ matrix.apifile }}"
-
-
-      # - name: Validate OpenAPI definition (head)
-      #   if: 
-      #   uses: char0n/swagger-editor-validate@v1
-      #   with:
-      #     definition-file: "trunk/${{ matrix.apifile }}"
-
-      # - name: Run OpenAPI Diffs
-      #   if: steps.head_apifile_exists.outputs.files_exists == 'true' && steps.trunk_apifile_exists.outputs.files_exists == 'true'
-      #   uses: oasdiff/oasdiff-action/diff@main
-      #   with:
-      #     base: 'trunk/specs/${{ matrix.apifile }}'
-      #     revision: 'head/specs/${{ matrix.apifile }}'
-      #     fail-on-diff: false
-      #     format: yaml
-
-      # - name: Run OpenAPI Breaking Change Detection
-      #   if: steps.head_apifile_exists.outputs.files_exists == 'true' && steps.trunk_apifile_exists.outputs.files_exists == 'true'
-      #   uses: oasdiff/oasdiff-action/breaking@main
-      #   continue-on-error: true
-      #   with:
-      #     base: 'trunk/specs/${{ matrix.apifile }}'
-      #     revision: 'head/specs/${{ matrix.apifile }}'
-
-      # - name: Run OpenAPI Changelog Generation
-      #   if: steps.head_apifile_exists.outputs.files_exists == 'true' && steps.trunk_apifile_exists.outputs.files_exists == 'true'
-      #   uses: oasdiff/oasdiff-action/changelog@main
-      #   with:
-      #     base: 'trunk/specs/${{ matrix.apifile }}'
-      #     revision: 'head/specs/${{ matrix.apifile }}'
+        uses: oasdiff/oasdiff-action/breaking@main
+        continue-on-error: true
+        with:
+          base: 'trunk/${{ matrix.apifile }}'
+          revision: 'head/${{ matrix.apifile }}'
