@@ -18,18 +18,18 @@ jobs:
           path: trunk
       - name: Validate OpenAPI Specs
         run: |
-          'echo "# OpenAPI Validation" >> ${GITHUB_STEP_SUMMARY}'
-          'echo "Passed" >> ${GITHUB_STEP_SUMMARY}'
+          echo "# OpenAPI Validation" >> ${GITHUB_STEP_SUMMARY}
+          echo "Passed" >> ${GITHUB_STEP_SUMMARY}
         shell: bash
       - name: Extract OpenAPI Diffs and Changelogs
         run: |
-          'echo "# OpenAPI ChangeLogs" >> ${GITHUB_STEP_SUMMARY}'
-          'echo "foo bar" >> ${GITHUB_STEP_SUMMARY}'
+          echo "# OpenAPI ChangeLogs" >> ${GITHUB_STEP_SUMMARY}
+          echo "foo bar" >> ${GITHUB_STEP_SUMMARY}
         shell: bash
       - name: Detect OpenAPI breakages
         run: |
-          'echo "# Breaking Changes" >> ${GITHUB_STEP_SUMMARY}'
-          'echo "None" >> ${GITHUB_STEP_SUMMARY}'
+          echo "# Breaking Changes" >> ${GITHUB_STEP_SUMMARY}
+          echo "None" >> ${GITHUB_STEP_SUMMARY}
         shell: bash
       - name: Run OpenAPI Diffs
         uses: oasdiff/oasdiff-action/diff@main
