@@ -294,6 +294,7 @@ components:
       x-swagger-router-model: io.swagger.petstore.model.Pet
       required:
         - photoUrls
+        - chipNumber
       properties:
         id:
           type: integer
