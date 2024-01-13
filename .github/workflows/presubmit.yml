@@ -79,16 +79,17 @@ jobs:
           echo "added: ${{ needs.get-affected-apis.outputs.added }}"
           echo "deleted: ${{ needs.get-affected-apis.outputs.deleted }}"
           echo "modified: ${{ needs.get-affected-apis.outputs.modified }}"
+          echo "contains(${{ needs.get-affected-apis.outputs.modified}}, ${{ matrix.apifile }})"
 
       - name: OpenAPI Validation
         # Skip validation if the file was deleted.
-        if: contains(${{ needs.get-affected-apis.outputs.deleted }}, ${{ matrix.apifile }}) == 'false'
+        if: contains(${{ needs.get-affected-apis.outputs.deleted }}, ${{ matrix.apifile }}) == "false"
         run: |
           echo "Validating trunk/${{ matrix.apifile }}"
 
       - name: OpeanAPI Diff
         # Run only if the file was modified (M)
-        if: contains(${{ needs.get-affected-apis.outputs.modified }}, ${{ matrix.apifile }}) == 'true'
+        if: contains(${{ needs.get-affected-apis.outputs.modified }}, ${{ matrix.apifile }}) == "true"
         run: |
           echo "Diffing trunk/${{ matrix.apifile }} vs head/${{ matrix.apifile }}"
 
