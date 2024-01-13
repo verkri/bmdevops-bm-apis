@@ -19,7 +19,7 @@ jobs:
       - name: Run OpenAPI Diffs
         uses: oasdiff/oasdiff-action/diff@main
         with:
-          base: 'trunk/bm_petstore/bm_pets.yml'
+          base: 'trunk/specs/bm_petstore.yml'
           revision: 'head/specs/bm_petstore.yml'
           fail-on-diff: false
           format: yaml
@@ -27,10 +27,10 @@ jobs:
         uses: oasdiff/oasdiff-action/breaking@main
         continue-on-error: true
         with:
-          base: 'trunk/bm_petstore/bm_pets.yml'
+          base: 'trunk/specs/bm_petstore.yml'
           revision: 'head/specs/bm_petstore.yml'
       - name: Run OpenAPI Changelog Generation
         uses: oasdiff/oasdiff-action/changelog@main
         with:
-          base: 'trunk/bm_petstore/bm_pets.yml'
+          base: 'trunk/specs/bm_petstore.yml'
           revision: 'head/specs/bm_petstore.yml'
