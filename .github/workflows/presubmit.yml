@@ -16,5 +16,5 @@ jobs:
       - name: Run OpenAPI Diff (HEAD vs master)
         uses: mvegter/openapi-diff-action@v0.23.5
         with:
-          head-spec: head/spec/bm_pets.yaml
-          base-spec: base/spec/bm_pets.yaml
+          head-spec: head/bm_petstore/bm_pets.yaml
+          base-spec: base/bm_petstore/bm_pets.yaml
