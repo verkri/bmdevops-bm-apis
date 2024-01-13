@@ -1,0 +1,36 @@
+name: Presubmit
+on: 
+  pull_request:
+    branches:
+      - master
+jobs: 
+  openapi-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out head branch
+        uses: actions/checkout@v4
+        with:
+          path: head
+      - name: Check out master branch
+        uses: actions/checkout@v4
+        with:
+          ref: master
+          path: trunk
+      - name: Run OpenAPI Diffs
+        uses: oasdiff/oasdiff-action/diff@main
+        with:
+          base: 'trunk/bm_petstore/bm_pets.yml'
+          revision: 'head/specs/bm_petstore.yml'
+          fail-on-diff: false
+          format: yaml
+      - name: Run OpenAPI Breaking Change Detection
+        uses: oasdiff/oasdiff-action/breaking@main
+        continue-on-error: true
+        with:
+          base: 'trunk/bm_petstore/bm_pets.yml'
+          revision: 'head/specs/bm_petstore.yml'
+      - name: Run OpenAPI Changelog Generation
+        uses: oasdiff/oasdiff-action/changelog@main
+        with:
+          base: 'trunk/bm_petstore/bm_pets.yml'
+          revision: 'head/specs/bm_petstore.yml'

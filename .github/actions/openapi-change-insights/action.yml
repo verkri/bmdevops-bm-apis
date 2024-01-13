@@ -1,0 +1,37 @@
+name: 'Extract OpenAPI Change Insights'
+description: 'Runs OpenAPI diff and emits changelogs, breakage information and diff outputs to the Summaries page.'
+inputs:
+  trunk_specs:
+    description: 'The glob pattern of the OpenAPI .yml files for the trunk (base) revision.'
+    required: true
+  head_specs:
+    description: 'The glob pattern of the OpenAPI .yml files for the HEAD (current) revision.'
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - name: Validate OpenAPI Specs
+      run: |
+        'echo "# OpenAPI Validation for ${{ inputs.head_specs }}" >> $GITHUB_STEP_SUMMARY'
+        'echo "Passed" >> $GITHUB_STEP_SUMMARY'
+      shell: bash
+    - name: Extract OpenAPI Diffs and Changelogs
+      run: |
+        'echo "# OpenAPI ChangeLogs" >> $GITHUB_STEP_SUMMARY'
+        'echo "foo bar" >> $GITHUB_STEP_SUMMARY'
+      shell: bash
+    - name: Detect OpenAPI breakages
+      run: |
+        'echo "# Breaking Changes" >> $GITHUB_STEP_SUMMARY'
+        'echo "None" >> $GITHUB_STEP_SUMMARY'
+      shell: bash
+      #   - name: Run OpenAPI Diff
+      #   uses: oasdiff/oasdiff-action/diff@main
+      #   with:
+      #     base: 'trunk/bm_petstore/bm_pets.yml'
+      #     revision: 'head/bm_petstore/bm_pets.yml'      
+      # - name: Run OpenAPI Breaking Change Detection
+      #   uses: oasdiff/oasdiff-action/breaking@main
+      #   with:
+      #     base: 'trunk/bm_petstore/bm_pets.yml'
+      #     revision: 'head/bm_petstore/bm_pets.yml'

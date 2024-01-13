@@ -7,8 +7,8 @@
         "*.yml"
     ],
     "scripts": {
-        "gen:openapi-java": "openapi-generator-cli generate -i ./bm_pets.yml -g typescript-fetch -o ./openapi --additional-properties=supportsES6=true,withInterfaces=true",
-        "gen:openapi-ts": "npx openapi-typescript ./bm_pets.yml -o ./openapi-ts/index.ts",
+        "gen:openapi-java": "openapi-generator-cli generate -i ./api.yml -g typescript-fetch -o ./openapi --additional-properties=supportsES6=true,withInterfaces=true",
+        "gen:openapi-ts": "npx openapi-typescript ./api.yml -o ./openapi-ts/index.ts",
         "gen": "npm run gen:openapi-java && npm run gen:openapi-ts"
     },
     "devDependencies": {

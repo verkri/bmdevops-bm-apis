@@ -1,3 +1,8 @@
+# Generated outputs
+openapi/
+openapi-ts/
+target/
+
 # Logs
 logs
 *.log
