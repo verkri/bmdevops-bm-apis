@@ -3,11 +3,9 @@ on:
   pull_request:
     branches:
       - master
-
 jobs: 
   openapi-check:
     runs-on: ubuntu-latest
-
     steps:
       - name: Check out head branch
         uses: actions/checkout@v4
@@ -18,13 +16,8 @@ jobs:
         with:
           ref: master
           path: trunk
-      - name: Run OpenAPI Diff
-        uses: oasdiff/oasdiff-action/diff@main
+      - name: Run OpenAPI Insights
+        uses: ./.github/actions/openapi-change-insights
         with:
-          base: 'trunk/bm_petstore/bm_pets.yml'
-          revision: 'head/bm_petstore/bm_pets.yml'      
-      - name: Run OpenAPI Breaking Change Detection
-        uses: oasdiff/oasdiff-action/breaking@main
-        with:
-          base: 'trunk/bm_petstore/bm_pets.yml'
-          revision: 'head/bm_petstore/bm_pets.yml'
+          trunk_specs: 'trunk/*.yml'
+          head_specs: 'head/*.yml'

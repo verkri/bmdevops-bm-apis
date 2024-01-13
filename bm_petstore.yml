@@ -4,7 +4,7 @@ servers:
 info:
   description: |-
     Bankmonitor Petstore API definition.
-  version: 1.0.0
+  version: 1.0.7
   title: Bankmonitor Petstore API
   contact:
     email: support.it@bankmonitor.hu
@@ -293,7 +293,6 @@ components:
     Pet:
       x-swagger-router-model: io.swagger.petstore.model.Pet
       required:
-        - name
         - photoUrls
       properties:
         id:
