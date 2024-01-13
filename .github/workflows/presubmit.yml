@@ -33,6 +33,13 @@ jobs:
           files: |
              specs/*.yml
 
+      - name: Debug
+        run: |
+          echo "affected: ${{ steps.changed-files.all_changed_files }}"
+          echo "dded: ${{ steps.changed-files.added_files }}"
+          echo "deleted: ${{ steps.changed-files.deleted_files }}"
+          echo "modified: ${{ steps.changed-files.modified_files }}"
+
     outputs:
       affected: ${{ steps.changed-files.all_changed_files }}
       added: ${{ steps.changed-files.added_files }}
