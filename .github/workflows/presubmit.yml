@@ -38,16 +38,16 @@ jobs:
 
       - name: Debug
         run: |
-          echo "affected: ${{ [ steps.changed-files.outputs.all_changed_files ] }}"
-          echo "added: ${{ [ steps.changed-files.outputs.added_files ] }}"
-          echo "deleted: ${{ [ steps.changed-files.outputs.deleted_files ] }}"
-          echo "modified: ${{ [ steps.changed-files.outputs.modified_files ] }}"
+          echo "affected: ${{ steps.changed-files.outputs.all_changed_files }}"
+          echo "added: ${{ steps.changed-files.outputs.added_files }}"
+          echo "deleted: ${{ steps.changed-files.outputs.deleted_files }}"
+          echo "modified: ${{ steps.changed-files.outputs.modified_files }}"
 
     outputs:
-      affected: ${{ [ steps.changed-files.outputs.all_changed_files ] }}
-      added: ${{ [ steps.changed-files.outputs.added_files ] }}
-      deleted: ${{ [ steps.changed-files.outputs.deleted_files ] }}
-      modified: ${{ [ steps.changed-files.outputs.modified_files ] }}
+      affected: ${{ steps.changed-files.outputs.all_changed_files }}
+      added: ${{ steps.changed-files.outputs.added_files }}
+      deleted: ${{ steps.changed-files.outputs.deleted_files }}
+      modified: ${{ steps.changed-files.outputs.modified_files }}
 
   openapi-check:
     if: ${{ needs.get-affected-apis.outputs.affected }}
