@@ -113,5 +113,4 @@ jobs:
       - name: Report OpenAPI Findings
         if: ${{ contains(needs.get-affected-apis.outputs.modified, matrix.apifile) }}
         run: |
-          msg_breaking=${{ steps.openapi-breaking.output.breaking}}
-          echo "::error file=${{ matrix.apifile }}::${msg_breaking}"
+          echo "::error title=Breaking Changes,file=${{ matrix.apifile }}::There are breaking changes!"
