@@ -32,5 +32,5 @@ jobs:
       - name: Run OpenAPI Changelog Generation
         uses: oasdiff/oasdiff-action/changelog@main
         with:
-          base: 'trunk/bm_specs/bm_petstore.yml'
+          base: 'trunk/specs/bm_petstore.yml'
           revision: 'head/specs/bm_petstore.yml'
