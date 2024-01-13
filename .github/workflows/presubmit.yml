@@ -84,7 +84,6 @@ jobs:
       - name: OpeanAPI Diff
         # Run only if the file was modified (M)
         if: ${{ contains(needs.get-affected-apis.outputs.modified, matrix.apifile) }}
-        id: openapi-diff
         uses: oasdiff/oasdiff-action/diff@main
         with:
           base: 'trunk/${{ matrix.apifile }}'
@@ -95,7 +94,6 @@ jobs:
       - name: Changelog Generation
         # Run only if the file was modified (M)
         if: ${{ contains(needs.get-affected-apis.outputs.modified, matrix.apifile) }}
-        id: openapi-changelog
         uses: oasdiff/oasdiff-action/changelog@main
         continue-on-error: true
         with:
@@ -115,7 +113,5 @@ jobs:
       - name: Report OpenAPI Findings
         if: ${{ contains(needs.get-affected-apis.outputs.modified, matrix.apifile) }}
         run: |
-          msg_changelog=${{ steps.openapi-changelog.output.changelog}}
           msg_breaking=${{ steps.openapi-breaking.output.breaking}}
-          test -n "${msg_changelog} && "echo "::warning file=${{ matrix.apifile }}::${msg_changelog}"
-          test -n "${msg_changelog} && "echo "::error file=${{ matrix.apifile }}::${msg_breaking}"
+          echo "::error file=${{ matrix.apifile }}::${msg_breaking}"
