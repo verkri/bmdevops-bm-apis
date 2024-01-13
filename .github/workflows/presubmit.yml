@@ -22,8 +22,7 @@ jobs:
         uses: oasdiff/oasdiff-action/diff@main
         with:
           base: 'trunk/bm_petstore/bm_pets.yml'
-          revision: 'head/bm_petstore/bm_pets.yml'
-          format: html      
+          revision: 'head/bm_petstore/bm_pets.yml'      
       - name: Run OpenAPI Breaking Change Detection
         uses: oasdiff/oasdiff-action/breaking@main
         with:
