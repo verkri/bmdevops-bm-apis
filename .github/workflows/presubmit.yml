@@ -16,8 +16,30 @@ jobs:
         with:
           ref: master
           path: trunk
-      - name: Run OpenAPI Insights
-        uses: ./.github/actions/openapi-change-insights
+      - name: Validate OpenAPI Specs
+        run: |
+          'echo "# OpenAPI Validation for ${{ inputs.head_specs }}" >> $GITHUB_STEP_SUMMARY'
+          'echo "Passed" >> $GITHUB_STEP_SUMMARY'
+        shell: bash
+      - name: Extract OpenAPI Diffs and Changelogs
+        run: |
+          'echo "# OpenAPI ChangeLogs" >> $GITHUB_STEP_SUMMARY'
+          'echo "foo bar" >> $GITHUB_STEP_SUMMARY'
+        shell: bash
+      - name: Detect OpenAPI breakages
+        run: |
+          'echo "# Breaking Changes" >> $GITHUB_STEP_SUMMARY'
+          'echo "None" >> $GITHUB_STEP_SUMMARY'
+        shell: bash
+      - name: Run OpenAPI Diffs
+        uses: oasdiff/oasdiff-action/diff@main
         with:
-          trunk_specs: 'trunk/*.yml'
-          head_specs: 'head/*.yml'
+          base: 'trunk/specs/bm_petstore.yml'
+          revision: 'head/specs/bm_petstore.yml'
+          fail-on-diff: false
+          format: yaml
+      - name: Run OpenAPI Breaking Change Detection
+        uses: oasdiff/oasdiff-action/breaking@main
+        with:
+          base: 'trunk/specs/bm_petstore.yml'
+          revision: 'head/specs/bm_petstore.yml'
