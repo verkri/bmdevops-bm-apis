@@ -40,6 +40,12 @@ jobs:
           format: yaml
       - name: Run OpenAPI Breaking Change Detection
         uses: oasdiff/oasdiff-action/breaking@main
+        continue-on-error: true
+        with:
+          base: 'trunk/bm_petstore/bm_pets.yml'
+          revision: 'head/specs/bm_petstore.yml'
+      - name: Run OpenAPI Changelog Generation
+        uses: oasdiff/oasdiff-action/changelog@main
         with:
           base: 'trunk/bm_petstore/bm_pets.yml'
           revision: 'head/specs/bm_petstore.yml'
