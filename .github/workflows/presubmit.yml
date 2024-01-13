@@ -57,7 +57,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix: 
-        apifile: ${{ fromJSON(needs.get-affected-apis.outputs.affected) }}
+        apifile: ${{ needs.get-affected-apis.outputs.affected }}
 
     steps:
       - name: Check out head branch
