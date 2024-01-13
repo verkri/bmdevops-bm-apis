@@ -306,7 +306,6 @@ components:
           example: doggie
         chipNumber:
           type: string
-          required: true
         category:
           $ref: '#/components/schemas/Category'
         photoUrls:
