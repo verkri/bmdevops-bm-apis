@@ -36,7 +36,7 @@ jobs:
         with:
           base: 'trunk/bm_petstore/bm_pets.yml'
           revision: 'head/bm_petstore/bm_pets.yml'
-          format: githubactions
+          format: html
       
       - name: Run OpenAPI Breaking Change Detection
         uses: oasdiff/oasdiff-action/breaking@main
