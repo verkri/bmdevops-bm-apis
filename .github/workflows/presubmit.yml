@@ -80,28 +80,29 @@ jobs:
           echo "deleted: ${{ needs.get-affected-apis.outputs.deleted }}"
           echo "modified: ${{ needs.get-affected-apis.outputs.modified }}"
           echo "contains(${{ join(needs.get-affected-apis.outputs.modified) }}, ${{ matrix.apifile }})"
+          echo "${{ contains(needs.get-affected-apis.outputs.modified, matrix.apifile) }}"
 
       - name: OpenAPI Validation
         # Skip validation if the file was deleted.
-        if: contains(needs.get-affected-apis.outputs.deleted, matrix.apifile) == "false"
+        if: ${{ ! contains(needs.get-affected-apis.outputs.deleted, matrix.apifile) }}
         run: |
           echo "Validating trunk/${{ matrix.apifile }}"
 
       - name: OpeanAPI Diff
         # Run only if the file was modified (M)
-        if: contains(${{ needs.get-affected-apis.outputs.modified }}, ${{ matrix.apifile }}) == "true"
+        if: ${{ contains(needs.get-affected-apis.outputs.modified, matrix.apifile) }}
         run: |
           echo "Diffing trunk/${{ matrix.apifile }} vs head/${{ matrix.apifile }}"
 
       - name: Changelog Generation
         # Run only if the file was modified (M)
-        if: contains(${{ needs.get-affected-apis.outputs.modified}}, ${{ matrix.apifile }}) == 'true'
+        if: ${{ contains(needs.get-affected-apis.outputs.modified, matrix.apifile) }}
         run: |
           echo "Changelog trunk/${{ matrix.apifile }} vs head/${{ matrix.apifile }}"
 
       - name: Breaking Change Detection
         # Run only if the file was modified (M)
-        if: contains(${{ needs.get-affected-apis.outputs.modified}}, ${{ matrix.apifile }}) == 'true'
+        if: ${{ contains(needs.get-affected-apis.outputs.modified, matrix.apifile) }}
         run: |
           echo "Changelog trunk/${{ matrix.apifile }} vs head/${{ matrix.apifile }}"
 
