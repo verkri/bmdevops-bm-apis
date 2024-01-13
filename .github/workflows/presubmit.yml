@@ -13,6 +13,8 @@ jobs:
         with:
           ref: master
           path: base
+      - name: List files
+        run: ls -l
       - name: Run OpenAPI Diff (HEAD vs master)
         uses: mvegter/openapi-diff-action@v0.23.5
         with:
