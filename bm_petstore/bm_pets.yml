@@ -295,7 +295,6 @@ components:
       required:
         - name
         - photoUrls
-        - chipNumber
       properties:
         id:
           type: integer
@@ -306,6 +305,7 @@ components:
           example: doggie
         chipNumber:
           type: string
+          example: HU-12345-12
         category:
           $ref: '#/components/schemas/Category'
         photoUrls:
