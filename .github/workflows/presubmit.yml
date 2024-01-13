@@ -79,11 +79,11 @@ jobs:
           echo "added: ${{ needs.get-affected-apis.outputs.added }}"
           echo "deleted: ${{ needs.get-affected-apis.outputs.deleted }}"
           echo "modified: ${{ needs.get-affected-apis.outputs.modified }}"
-          echo "contains(${{ needs.get-affected-apis.outputs.modified}}, ${{ matrix.apifile }})"
+          echo "contains(${{ join(needs.get-affected-apis.outputs.modified) }}, ${{ matrix.apifile }})"
 
       - name: OpenAPI Validation
         # Skip validation if the file was deleted.
-        if: contains(${{ needs.get-affected-apis.outputs.deleted }}, ${{ matrix.apifile }}) == "false"
+        if: contains(needs.get-affected-apis.outputs.deleted, matrix.apifile) == "false"
         run: |
           echo "Validating trunk/${{ matrix.apifile }}"
 
