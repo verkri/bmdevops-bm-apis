@@ -38,7 +38,7 @@ jobs:
       - name: Debug
         run: |
           echo "affected: ${{ steps.changed-files.outputs.all_changed_files }}"
-          echo "dded: ${{ steps.changed-files.outputs.added_files }}"
+          echo "added: ${{ steps.changed-files.outputs.added_files }}"
           echo "deleted: ${{ steps.changed-files.outputs.deleted_files }}"
           echo "modified: ${{ steps.changed-files.outputs.modified_files }}"
 
