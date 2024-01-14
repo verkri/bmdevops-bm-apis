@@ -7,9 +7,9 @@
         "${API_FILEPATH}"
     ],
     "scripts": {
-        "gen:openapi-java": "dotenv cross-var openapi-generator-cli generate -i ${API_FILEPATH} -g typescript-fetch -o ./openapi --additional-properties=supportsES6=true,withInterfaces=true",
-        "gen:openapi-ts": "dotenv cross-var openapi-typescript ${API_FILEPATH} -o ./openapi-ts/index.ts",
-        "gen": "dotenv cross-var npm run gen:openapi-java && npm run gen:openapi-ts"
+        "gen:openapi-java": "openapi-generator-cli generate -i ${API_FILEPATH} -g typescript-fetch -o ./openapi --additional-properties=supportsES6=true,withInterfaces=true",
+        "gen:openapi-ts": "openapi-typescript ${API_FILEPATH} -o ./openapi-ts/index.ts",
+        "gen": "npm run gen:openapi-java && npm run gen:openapi-ts"
     },
     "devDependencies": {
         "@openapitools/openapi-generator-cli": "^2.7.0",
