@@ -8,7 +8,7 @@
       <repositories>
         <repository>
           <id>bankmonitor-bm-apis</id>
-          <url>https://bankmonitor-767398085282.d.codeartifact.us-east-1.amazonaws.com/maven/bm-apis/</url>
+          <url>https://${AWS_CODEARTIFACT_DOMAIN}-${AWS_CODEARTIFACT_DOMAIN_OWNER}.d.codeartifact.${AWS_CODEARTIFACT_REGION}.amazonaws.com/maven/${AWS_CODEARTIFACT_REPOSITORY}/</url>
         </repository>
       </repositories>
     </profile>
@@ -18,7 +18,7 @@
     <server>
       <id>bankmonitor-bm-apis</id>
       <username>aws</username>
-      <password>${env.CODEARTIFACT_AUTH_TOKEN}</password>
+      <password>${AWS_CODEARTIFACT_AUTH_TOKEN}</password>
     </server>
   </servers>
 </settings>

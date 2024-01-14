@@ -62,9 +62,12 @@ jobs:
     
       - name: Npm Install
         working-directory: npm
+        env:
+          API_NPM_NAME: bm_petstore
+          API_NPM_VERSION: 1.0.7
+          API_FILEPATH: ../specs/bm_petstore.yml
         run: |
-          cp ../specs/bm_petstore.yml .
-          API_NPM_NAME=bm_petstore API_NPM_VERSION=1.0.7 API_FILEPATH=./bm_petstore.yml envsubst < package.json.tmpl > package.json
+          envsubst < package.json.tmpl > package.json
           cat package.json
           npm install
 
@@ -89,20 +92,6 @@ jobs:
         run: |
           echo "token=$(aws codeartifact get-authorization-token --domain ${AWS_CODEARTIFACT_DOMAIN} --domain-owner ${AWS_CODEARTIFACT_DOMAIN_OWNER} --query authorizationToken --output text)" >> "${GITHUB_OUTPUT}"
           cat ${GITHUB_OUTPUT}
-      
-      # - name: Authenticate to AWS CodeArtifact
-      #   env:
-      #     AWS_CODEARTIFACT_DOMAIN_OWNER: 767398085282
-      #     AWS_CODEARTIFACT_DOMAIN: bankmonitor
-      #     AWS_CODEARTIFACT_REPOSITORY: bm-apis
-      #   run: |
-      #     cd npm
-      #     aws codeartifact login --tool npm --repository ${AWS_CODEARTIFACT_REPOSITORY} --domain ${AWS_CODEARTIFACT_DOMAIN} --domain-owner ${AWS_CODEARTIFACT_DOMAIN_OWNER}
-
-      # - name: Publish to AWS CodeArtifact
-      #   run: 
-      #     cd npm
-      #     npm publish
 
       - name: Publish to AWS CodeArtifact
         env:
@@ -116,21 +105,73 @@ jobs:
           envsubst < npmrc.tmpl > .npmrc
           npm publish
 
-          
+  maven-publish:
+    runs-on: ubuntu-latest
+    # needs: [get-affected-apis]
 
-      # - name: Debug
-      #   run: |
-      #     pwd
-      #     echo "auth token: ${{ steps.aws-auth.outputs.token }}"
+    # if: ${{ needs.get-affected-apis.outputs.affected != '[]' }}
 
-      # - name: AWS CodeArtifact Publish
-      #   uses: JS-DevTools/npm-publish@v3
-      #   env:
-      #     AWS_CODEARTIFACT_REGISTRY: https://bankmonitor-767398085282.d.codeartifact.us-east-1.amazonaws.com/npm/bm-apis/
-      #   with:
-      #     # The package input specifies the workdir under which the package.json is found.
-      #     # Don't think it denotes the type of packaging...
-      #     package: ./npm
-      #     token: $ {{ steps.aws-auth.outputs.token }}
-      #     registry: ${{ env.AWS_CODEARTIFACT_REPOSITORY }}
-      #     logger: debug
+    # strategy:
+    #   fail-fast: false
+    #   max-parallel: 4
+    #   matrix: 
+    #     apifile: ${{ fromJSON(needs.get-affected-apis.outputs.affected) }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java and Maven
+        uses: actions/setup-java@v2
+        with:
+          java-version: "11"
+    
+      - name: Configure Maven Project
+        working-directory: maven
+        env:
+          API_MAVEN_NAME: bm_petstore
+          API_MAVEN_VERSION: 1.0.7
+          API_FILEPATH: ../specs/bm_petstore.yml
+          AWS_CODEARTIFACT_DOMAIN_OWNER: 767398085282
+          AWS_CODEARTIFACT_DOMAIN: bankmonitor
+          AWS_CODEARTIFACT_REGION: eu-west-1
+          AWS_CODEARTIFACT_REPOSITORY: bm-apis
+        run: |
+          envsubst < ${API_MAVEN_NAME}.xml.tmpl > pom.xml
+          cat pom.xml
+
+      - name: Build Maven Package
+        working-directory: maven
+        run: |
+          mvn clean install package
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        env:
+          AWS_CODEARTIFACT_REGION: eu-west-1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_CODEARTIFACT_REGION }}
+
+      - name: Authenticate to AWS CodeArtifact
+        id: aws-auth
+        env:
+          AWS_CODEARTIFACT_DOMAIN_OWNER: 767398085282
+          AWS_CODEARTIFACT_DOMAIN: bankmonitor
+        run: |
+          echo "token=$(aws codeartifact get-authorization-token --domain ${AWS_CODEARTIFACT_DOMAIN} --domain-owner ${AWS_CODEARTIFACT_DOMAIN_OWNER} --query authorizationToken --output text)" >> "${GITHUB_OUTPUT}"
+          cat ${GITHUB_OUTPUT}
+
+      - name: Publish to AWS CodeArtifact
+        env:
+          AWS_CODEARTIFACT_AUTH_TOKEN: ${{ steps.aws-auth.outputs.token }} 
+          AWS_CODEARTIFACT_DOMAIN_OWNER: 767398085282
+          AWS_CODEARTIFACT_DOMAIN: bankmonitor
+          AWS_CODEARTIFACT_REGION: eu-west-1
+          AWS_CODEARTIFACT_REPOSITORY: bm-apis
+        working-directory: maven
+        run: |
+          envsubst < settings.xml.tmpl > settings.xml
+          cat settings.xml
+          mvn -s settings.xml deploy
