@@ -15,12 +15,6 @@ on:
     branches:
       - master
 
-env:
-  AWS_CODEARTIFACT_DOMAIN_OWNER: 767398085282
-  AWS_CODEARTIFACT_DOMAIN: bankmonitor
-  AWS_CODEARTIFACT_REPOSITORY: bm-apis
-  AWS_CODEARTIFACT_REGION: eu-west-1
-
 jobs:
   # get-affected-apis:
   #   runs-on: ubuntu-latest
@@ -67,51 +61,76 @@ jobs:
           node-version: "21"
     
       - name: Npm Install
+        working-directory: npm
         run: |
-          cd npm
           cp ../specs/bm_petstore.yml .
           API_NPM_NAME=bm_petstore API_NPM_VERSION=1.0.7 API_FILEPATH=./bm_petstore.yml envsubst < package.json.tmpl > package.json
           cat package.json
           npm install
 
       - name: Generate OpenAPI stubs
-        run: |
-          cd npm
-          npm run gen
+        working-directory: npm
+        run: npm run gen
 
-      - name: Configure AWS credentials
+      - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
+        env:
+          AWS_CODEARTIFACT_REGION: eu-west-1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_CODEARTIFACT_REGION }}
 
       - name: Authenticate to AWS CodeArtifact
+        id: aws-auth
+        env:
+          AWS_CODEARTIFACT_DOMAIN_OWNER: 767398085282
+          AWS_CODEARTIFACT_DOMAIN: bankmonitor
         run: |
-          cd npm
-          aws codeartifact login --tool npm --repository ${AWS_CODEARTIFACT_REPOSITORY} --domain ${AWS_CODEARTIFACT_DOMAIN} --domain-owner ${AWS_CODEARTIFACT_DOMAIN_OWNER} --region ${AWS_CODEARTIFACT_REGION}
+          echo "token=$(aws codeartifact get-authorization-token --domain ${AWS_CODEARTIFACT_DOMAIN} --domain-owner ${AWS_CODEARTIFACT_DOMAIN_OWNER} --query authorizationToken --output text)" >> "${GITHUB_OUTPUT}"
+          cat ${GITHUB_OUTPUT}
+      
+      # - name: Authenticate to AWS CodeArtifact
+      #   env:
+      #     AWS_CODEARTIFACT_DOMAIN_OWNER: 767398085282
+      #     AWS_CODEARTIFACT_DOMAIN: bankmonitor
+      #     AWS_CODEARTIFACT_REPOSITORY: bm-apis
+      #   run: |
+      #     cd npm
+      #     aws codeartifact login --tool npm --repository ${AWS_CODEARTIFACT_REPOSITORY} --domain ${AWS_CODEARTIFACT_DOMAIN} --domain-owner ${AWS_CODEARTIFACT_DOMAIN_OWNER}
+
+      # - name: Publish to AWS CodeArtifact
+      #   run: 
+      #     cd npm
+      #     npm publish
 
       - name: Publish to AWS CodeArtifact
-        run: 
-          cd npm
+        env:
+          AWS_CODEARTIFACT_AUTH_TOKEN: ${{ steps.aws-auth.outputs.token }} 
+          AWS_CODEARTIFACT_DOMAIN_OWNER: 767398085282
+          AWS_CODEARTIFACT_DOMAIN: bankmonitor
+          AWS_CODEARTIFACT_REGION: eu-west-1
+          AWS_CODEARTIFACT_REPOSITORY: bm-apis
+        working-directory: npm
+        run: |
+          envsubst < npmrc.tmpl > .npmrc
           npm publish
 
+          
 
-      # - name: Authenticate to AWS CodeArtifact
-      #   id: aws-auth
+      # - name: Debug
       #   run: |
-      #     echo "token=$(aws codeartifact get-authorization-token --domain ${AWS_CODEARTIFACT_DOMAIN} --query authorizationToken --output text)" >> "${GITHUB_OUTPUT}"
-      #     cat ${GITHUB_OUTPUT}
-
-      # - name: Debug Token
-      #   run: |
+      #     pwd
       #     echo "auth token: ${{ steps.aws-auth.outputs.token }}"
 
       # - name: AWS CodeArtifact Publish
       #   uses: JS-DevTools/npm-publish@v3
+      #   env:
+      #     AWS_CODEARTIFACT_REGISTRY: https://bankmonitor-767398085282.d.codeartifact.us-east-1.amazonaws.com/npm/bm-apis/
       #   with:
       #     # The package input specifies the workdir under which the package.json is found.
       #     # Don't think it denotes the type of packaging...
-      #     package: npm
+      #     package: ./npm
       #     token: $ {{ steps.aws-auth.outputs.token }}
       #     registry: ${{ env.AWS_CODEARTIFACT_REPOSITORY }}
+      #     logger: debug
