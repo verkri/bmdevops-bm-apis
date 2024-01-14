@@ -124,7 +124,7 @@ jobs:
       - name: Setup Java and Maven
         uses: actions/setup-java@v2
         with:
-          java-version: '11'
+          java-version: '17'
           distribution: 'temurin'
     
       - name: Configure Maven Project
