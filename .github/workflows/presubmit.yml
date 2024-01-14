@@ -32,7 +32,7 @@ jobs:
         id: changed-files
         uses: tj-actions/changed-files@v41
         with:
-          json: "true"
+          json: true
           files: |
              specs/*.yml
 
@@ -56,9 +56,10 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
+      max-parallel: 4
       matrix: 
         # apifile: [ "specs/bm_bugstore.yml", "specs/bm_petstore.yml" ]
-        apifile: ${{ fromJson(needs.get-affected-apis.outputs.affected) }}
+        apifile: ${{ fromJSON(needs.get-affected-apis.outputs.affected) }}
 
     steps:
       - name: Check out head branch
