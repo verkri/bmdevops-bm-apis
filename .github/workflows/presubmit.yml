@@ -1,18 +1,15 @@
-# CUJs:
+# Critical User Journeys:
+#
 #   - new api.yml added (OK)
-#      - no trunk .yml file exists ! (OK)
-#      - check validity, (OK)
-#      - do NO diffs, changelogs, breaking changes (OK)
+#      - check openapi validity
+#      - run NO diffs, changelogs, breaking changes
 #   - api.yml file changed (OK)
-#      - check validity, diffs, changelogs, breaking changes (OK)
+#      - check openapi validity, 
+#      - run diffs, changelogs, breaking changes
 #   - api.yml file deleted (OK)
-#      - no head .yml file exists ! (OK)
-#      - dont run anything (OK)
-#   - api.yml files moved (restructure)
-#      - no trunk .yml file exists !
-#      - no head .yml file exists !
-#      - we need to check that the generated package contents (NPM, Maven) are the same.
-
+#      - run NOTHING
+#   - api.yml files moved (TBD)
+#      - check that the generated package contents (NPM, Maven) are the same.
 name: Presubmit
 on: 
   pull_request:
@@ -37,16 +34,8 @@ jobs:
           files: |
              specs/*.yml
 
-      - name: Job Output Debug
-        run: |
-          echo "::debug::get-affected-apis affected: ${{ steps.changed-files.outputs.all_changed_files }}"
-          echo "::debug::get-affected-apis added: ${{ steps.changed-files.outputs.added_files }}"
-          echo "::debug::get-affected-apis deleted: ${{ steps.changed-files.outputs.deleted_files }}"
-          echo "::debug::get-affected-apis modified: ${{ steps.changed-files.outputs.modified_files }}"
-
     outputs:
       affected: ${{ steps.changed-files.outputs.all_changed_files }}
-      added: ${{ steps.changed-files.outputs.added_files }}
       deleted: ${{ steps.changed-files.outputs.deleted_files }}
       modified: ${{ steps.changed-files.outputs.modified_files }}
 
@@ -59,7 +48,6 @@ jobs:
       fail-fast: false
       max-parallel: 4
       matrix: 
-        # apifile: [ "specs/bm_bugstore.yml", "specs/bm_petstore.yml" ]
         apifile: ${{ fromJSON(needs.get-affected-apis.outputs.affected) }}
 
     steps:
@@ -74,13 +62,12 @@ jobs:
           ref: master
           path: trunk
 
-      # Skip for now to speed up.
-      # - name: OpenAPI Validation
-      #   # Skip validation if the file was deleted.
-      #   if: ${{ ! contains(needs.get-affected-apis.outputs.deleted, matrix.apifile) }}
-      #   uses: char0n/swagger-editor-validate@v1
-      #   with:
-      #     definition-file: "${{ matrix.apifile }}"
+      - name: OpenAPI Validation
+        # Skip validation if the file was deleted (D).
+        if: ${{ ! contains(needs.get-affected-apis.outputs.deleted, matrix.apifile) }}
+        uses: char0n/swagger-editor-validate@v1
+        with:
+          definition-file: "${{ matrix.apifile }}"
 
       - name: Changelog Generation
         # Run only if the file was modified (M)
@@ -97,6 +84,7 @@ jobs:
         if: ${{ contains(needs.get-affected-apis.outputs.modified, matrix.apifile) }}
         id: openapi-breaking
         uses: oasdiff/oasdiff-action/breaking@main
+        # TODO: Later fix that this steps fails and we require a version bump.
         continue-on-error: true
         with:
           base: 'trunk/${{ matrix.apifile }}'
@@ -105,7 +93,7 @@ jobs:
       - name: Report OpenAPI Changelog Findings
         # Run only if the file was modified (M)
         if: ${{ contains(needs.get-affected-apis.outputs.modified, matrix.apifile) }}
-        # TODO: Improve the report visuals using Markdown
+        # TODO: Improve the report visuals (step summary) using Markdown.
         run: |
           echo "::warning file=${{ matrix.apifile }}::OpenAPI changelog at: https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
           echo "${{ join(steps.openapi-changelog.outputs.*,'\n') }}" >> $GITHUB_STEP_SUMMARY
