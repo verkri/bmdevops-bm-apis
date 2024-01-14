@@ -69,12 +69,14 @@ jobs:
         run: |
           cd npm
           API_NPM_NAME=bm_petstore API_NPM_VERSION=1.0.7 API_FILEPATH=../specs/bm_petstore.yml envsubst < package.json.tmpl > package.json
+          cat package.json
           npm install
 
       - name: Generate OpenAPI stubs
         run: |
           cd npm
           npm run gen
+          ls -lR
 
 #       - name: Configure AWS credentials
 #         uses: aws-actions/configure-aws-credentials@v1
