@@ -1,59 +1,59 @@
-
-# 1. get affected apis
-# 
-# 2. for added/changed apis:
-#   - read openapi version
-#   - npm build, npm package
-#   - maven build, maven package
-# 2. for deleted apis:
-#   - do nothing.
-# 
-
 name: Postsubmit
 on:
   pull_request:
     branches:
       - master
 
+env:
+  AWS_CODEARTIFACT_DOMAIN_OWNER: 767398085282
+  AWS_CODEARTIFACT_DOMAIN: bankmonitor
+  AWS_CODEARTIFACT_REGION: eu-west-1
+  AWS_CODEARTIFACT_REPOSITORY: bm-apis
+
 jobs:
-  # get-affected-apis:
-  #   runs-on: ubuntu-latest
-
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v4
-  #       with:
-  #         fetch-depth: 0
-
-  #     - name: Get changed files
-  #       id: changed-files
-  #       uses: tj-actions/changed-files@v41
-  #       with:
-  #         json: true
-  #         escape_json: false
-  #         files: |
-  #            specs/*.yml
-
-  #   outputs:
-  #     affected: ${{ steps.changed-files.outputs.all_changed_files }}
-  #     deleted: ${{ steps.changed-files.outputs.deleted_files }}
-  #     modified: ${{ steps.changed-files.outputs.modified_files }}
-
-  npm-publish:
+  get-affected-apis:
     runs-on: ubuntu-latest
-    # needs: [get-affected-apis]
-
-    # if: ${{ needs.get-affected-apis.outputs.affected != '[]' }}
-
-    # strategy:
-    #   fail-fast: false
-    #   max-parallel: 4
-    #   matrix: 
-    #     apifile: ${{ fromJSON(needs.get-affected-apis.outputs.affected) }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v41
+        with:
+          json: true
+          escape_json: false
+          files: |
+             specs/*.yml
+
+    outputs:
+      # ACMR files (Added, Copied, Modified, Renamed)
+      affected: ${{ steps.changed-files.outputs.all_changed_files }}
+
+  npm-publish:
+    runs-on: ubuntu-latest
+    needs: [get-affected-apis]
+
+    if: ${{ needs.get-affected-apis.outputs.affected != '[]'}}
+
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix: 
+        apifile: ${{ fromJSON(needs.get-affected-apis.outputs.affected) }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get API version
+        id: openapi-version
+        uses: mikefarah/yq@master
+        with:
+          cmd: echo "version=$(yq '.info.version' ${{ matrix.apifile }}) >> "${GITHUB_OUTPUT}"
 
       - name: Setup Node
         uses: actions/setup-node@v3
@@ -63,10 +63,10 @@ jobs:
       - name: Npm Install
         working-directory: npm
         env:
-          API_NPM_NAME: bm_petstore
-          API_NPM_VERSION: 1.0.7
-          API_FILEPATH: ../specs/bm_petstore.yml
+          API_NPM_VERSION: ${{ steps.openapi-version.outputs.version }}
+          API_FILEPATH: ../${{ matrix.apifile }}
         run: |
+          export API_NPM_NAME=$(basename ${API_FILEPATH%.*})
           envsubst < package.json.tmpl > package.json
           cat package.json
           npm install
@@ -77,8 +77,6 @@ jobs:
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
-        env:
-          AWS_CODEARTIFACT_REGION: eu-west-1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -86,9 +84,6 @@ jobs:
 
       - name: Authenticate to AWS CodeArtifact
         id: aws-auth
-        env:
-          AWS_CODEARTIFACT_DOMAIN_OWNER: 767398085282
-          AWS_CODEARTIFACT_DOMAIN: bankmonitor
         run: |
           echo "token=$(aws codeartifact get-authorization-token --domain ${AWS_CODEARTIFACT_DOMAIN} --domain-owner ${AWS_CODEARTIFACT_DOMAIN_OWNER} --query authorizationToken --output text)" >> "${GITHUB_OUTPUT}"
           cat ${GITHUB_OUTPUT}
@@ -96,10 +91,6 @@ jobs:
       - name: Publish to AWS CodeArtifact
         env:
           AWS_CODEARTIFACT_AUTH_TOKEN: ${{ steps.aws-auth.outputs.token }} 
-          AWS_CODEARTIFACT_DOMAIN_OWNER: 767398085282
-          AWS_CODEARTIFACT_DOMAIN: bankmonitor
-          AWS_CODEARTIFACT_REGION: eu-west-1
-          AWS_CODEARTIFACT_REPOSITORY: bm-apis
         working-directory: npm
         run: |
           envsubst < npmrc.tmpl > .npmrc
@@ -107,19 +98,25 @@ jobs:
 
   maven-publish:
     runs-on: ubuntu-latest
-    # needs: [get-affected-apis]
+    needs: [get-affected-apis]
 
-    # if: ${{ needs.get-affected-apis.outputs.affected != '[]' }}
+    if: ${{ needs.get-affected-apis.outputs.affected != '[]' }}
 
-    # strategy:
-    #   fail-fast: false
-    #   max-parallel: 4
-    #   matrix: 
-    #     apifile: ${{ fromJSON(needs.get-affected-apis.outputs.affected) }}
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix: 
+        apifile: ${{ fromJSON(needs.get-affected-apis.outputs.affected) }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Get API version
+        id: openapi-version
+        uses: mikefarah/yq@master
+        with:
+          cmd: echo "version=$(yq '.info.version' ${{ matrix.apifile }}) >> "${GITHUB_OUTPUT}"
 
       - name: Setup Java and Maven
         uses: actions/setup-java@v2
@@ -130,14 +127,10 @@ jobs:
       - name: Configure Maven Project
         working-directory: maven
         env:
-          API_MAVEN_NAME: bm_petstore
-          API_MAVEN_VERSION: 1.0.7
-          API_FILEPATH: ../specs/bm_petstore.yml
-          AWS_CODEARTIFACT_DOMAIN_OWNER: 767398085282
-          AWS_CODEARTIFACT_DOMAIN: bankmonitor
-          AWS_CODEARTIFACT_REGION: eu-west-1
-          AWS_CODEARTIFACT_REPOSITORY: bm-apis
+          API_MAVEN_VERSION: ${{ steps.openapi-version.outputs.version }}
+          API_FILEPATH: ../${{ matrix.apifile }}
         run: |
+          export API_MAVEN_NAME=$(basename ${API_FILEPATH%.*})
           envsubst < ${API_MAVEN_NAME}.xml.tmpl > pom.xml
           cat pom.xml
 
@@ -148,8 +141,6 @@ jobs:
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
-        env:
-          AWS_CODEARTIFACT_REGION: eu-west-1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -157,9 +148,6 @@ jobs:
 
       - name: Authenticate to AWS CodeArtifact
         id: aws-auth
-        env:
-          AWS_CODEARTIFACT_DOMAIN_OWNER: 767398085282
-          AWS_CODEARTIFACT_DOMAIN: bankmonitor
         run: |
           echo "token=$(aws codeartifact get-authorization-token --domain ${AWS_CODEARTIFACT_DOMAIN} --domain-owner ${AWS_CODEARTIFACT_DOMAIN_OWNER} --query authorizationToken --output text)" >> "${GITHUB_OUTPUT}"
           cat ${GITHUB_OUTPUT}
@@ -167,10 +155,6 @@ jobs:
       - name: Publish to AWS CodeArtifact
         env:
           AWS_CODEARTIFACT_AUTH_TOKEN: ${{ steps.aws-auth.outputs.token }} 
-          AWS_CODEARTIFACT_DOMAIN_OWNER: 767398085282
-          AWS_CODEARTIFACT_DOMAIN: bankmonitor
-          AWS_CODEARTIFACT_REGION: eu-west-1
-          AWS_CODEARTIFACT_REPOSITORY: bm-apis
         working-directory: maven
         run: |
           envsubst < settings.xml.tmpl > settings.xml
