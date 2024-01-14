@@ -89,10 +89,12 @@ jobs:
       - name: Authenticate to AWS CodeArtifact
         run: |
           cd npm
-          aws codeartifact login --tool npm --repository ${{ AWS_CODEARTIFACT_REPOSITORY }} --domain ${{ AWS_CODEARTIFACT_DOMAIN }} --domain-owner ${{ AWS_CODEARTIFACT_DOMAIN_OWNER }} --region ${{ AWS_CODEARTIFACT_REGION }}
+          aws codeartifact login --tool npm --repository ${AWS_CODEARTIFACT_REPOSITORY} --domain ${AWS_CODEARTIFACT_DOMAIN} --domain-owner ${AWS_CODEARTIFACT_DOMAIN_OWNER} --region ${AWS_CODEARTIFACT_REGION}
 
       - name: Publish to AWS CodeArtifact
-        run: npm publish
+        run: 
+          cd npm
+          npm publish
 
 
       # - name: Authenticate to AWS CodeArtifact
