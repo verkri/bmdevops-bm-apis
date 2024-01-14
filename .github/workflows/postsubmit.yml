@@ -16,9 +16,10 @@ on:
       - master
 
 env:
-  AWS_CODEARTIFACT_REPOSITORY: https://bankmonitor-767398085282.d.codeartifact.us-east-1.amazonaws.com/npm/bm-apis/
+  AWS_CODEARTIFACT_DOMAIN_OWNER: 767398085282
   AWS_CODEARTIFACT_DOMAIN: bankmonitor
-  AWS_DEFAULT_REGION: eu-west-1
+  AWS_CODEARTIFACT_REPOSITORY: bm-apis
+  AWS_CODEARTIFACT_REGION: eu-west-1
 
 jobs:
   # get-affected-apis:
@@ -83,23 +84,32 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_DEFAULT_REGION }}
+          aws-region: ${{ env.AWS_CODEARTIFACT_REGION }}
 
       - name: Authenticate to AWS CodeArtifact
-        id: aws-auth
         run: |
-          echo "token=$(aws codeartifact get-authorization-token --domain ${AWS_CODEARTIFACT_DOMAIN} --query authorizationToken --output text)" >> "${GITHUB_OUTPUT}"
-          cat ${GITHUB_OUTPUT}
+          cd npm
+          aws codeartifact login --tool npm --repository ${{ AWS_CODEARTIFACT_REPOSITORY }} --domain ${{ AWS_CODEARTIFACT_DOMAIN }} --domain-owner ${{ AWS_CODEARTIFACT_DOMAIN_OWNER }} --region ${{ AWS_CODEARTIFACT_REGION }}
 
-      - name: Debug Token
-        run: |
-          echo "auth token: ${{ steps.aws-auth.outputs.token }}"
+      - name: Publish to AWS CodeArtifact
+        run: npm publish
 
-      - name: AWS CodeArtifact Publish
-        uses: JS-DevTools/npm-publish@v3
-        with:
-          # The package input specifies the workdir under which the package.json is found.
-          # Don't think it denotes the type of packaging...
-          package: npm
-          token: $ {{ steps.aws-auth.outputs.token }}
-          registry: ${{ env.AWS_CODEARTIFACT_REPOSITORY }}
+
+      # - name: Authenticate to AWS CodeArtifact
+      #   id: aws-auth
+      #   run: |
+      #     echo "token=$(aws codeartifact get-authorization-token --domain ${AWS_CODEARTIFACT_DOMAIN} --query authorizationToken --output text)" >> "${GITHUB_OUTPUT}"
+      #     cat ${GITHUB_OUTPUT}
+
+      # - name: Debug Token
+      #   run: |
+      #     echo "auth token: ${{ steps.aws-auth.outputs.token }}"
+
+      # - name: AWS CodeArtifact Publish
+      #   uses: JS-DevTools/npm-publish@v3
+      #   with:
+      #     # The package input specifies the workdir under which the package.json is found.
+      #     # Don't think it denotes the type of packaging...
+      #     package: npm
+      #     token: $ {{ steps.aws-auth.outputs.token }}
+      #     registry: ${{ env.AWS_CODEARTIFACT_REPOSITORY }}
