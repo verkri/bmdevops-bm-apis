@@ -111,7 +111,8 @@ jobs:
           revision: '${{ matrix.apifile }}'
 
       - name: Report OpenAPI Findings
+        if: ${{ contains(needs.get-affected-apis.outputs.modified, matrix.apifile) }}
         # if: steps.openapi-changelog.outputs.changelog
         run: |
           echo "::warning file=${{ matrix.apifile }}::There are OpenAPI Diffs, check them at: https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
-          echo ${{steps.openapi-changelog.outputs.changelog}} >> $GITHUB_STEP_SUMMARY
+          echo "${{ join(steps.openapi-changelog.outputs.*,'\n') }}" >> $GITHUB_STEP_SUMMARY
