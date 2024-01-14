@@ -73,10 +73,10 @@ jobs:
           node-version: "21"
     
       - name: Npm Install
-        run: npm install
+        run: (cd npm && npm install)
 
       - name: Generate OpenAPI stubs
-        run: npm run gen
+        run: (cd npm && npm run gen)
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
