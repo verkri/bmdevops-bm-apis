@@ -112,6 +112,7 @@ paths:
               - available
               - pending
               - sold
+              - new
             default: available
       responses:
         '200':
