@@ -58,7 +58,7 @@ jobs:
       fail-fast: false
       matrix: 
         # apifile: [ "specs/bm_bugstore.yml", "specs/bm_petstore.yml" ]
-        apifile: ${{ needs.get-affected-apis.outputs.affected }}
+        apifile: ${{ fromJson(needs.get-affected-apis.outputs.affected) }}
 
     steps:
       - name: Check out head branch
