@@ -1,36 +1,103 @@
+# Critical User Journeys:
+#
+#   - new api.yml added (OK)
+#      - check openapi validity
+#      - run NO diffs, changelogs, breaking changes
+#   - api.yml file changed (OK)
+#      - check openapi validity, 
+#      - run diffs, changelogs, breaking changes
+#   - api.yml file deleted (OK)
+#      - run NOTHING
+#   - api.yml files moved (TBD)
+#      - check that the generated package contents (NPM, Maven) are the same.
+#   - no api.yml file changed/moved/added/deleted (OK)
+#      - run NO openapi jobs
+
 name: Presubmit
 on: 
   pull_request:
     branches:
       - master
 jobs: 
+  get-affected-apis:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v41
+        with:
+          json: true
+          escape_json: false
+          files: |
+             specs/*.yml
+
+    outputs:
+      affected: ${{ steps.changed-files.outputs.all_changed_files }}
+      deleted: ${{ steps.changed-files.outputs.deleted_files }}
+      modified: ${{ steps.changed-files.outputs.modified_files }}
+
   openapi-check:
     runs-on: ubuntu-latest
+    needs: [get-affected-apis]
+
+    if: ${{ needs.get-affected-apis.outputs.affected != '[]' }}
+
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix: 
+        apifile: ${{ fromJSON(needs.get-affected-apis.outputs.affected) }}
+
     steps:
       - name: Check out head branch
         uses: actions/checkout@v4
-        with:
-          path: head
+
       - name: Check out master branch
+        # Run only if the file was modified (M)
+        if: ${{ contains(needs.get-affected-apis.outputs.modified, matrix.apifile) }}
         uses: actions/checkout@v4
         with:
           ref: master
           path: trunk
-      - name: Run OpenAPI Diffs
-        uses: oasdiff/oasdiff-action/diff@main
+
+      - name: OpenAPI Validation
+        # Skip validation if the file was deleted (D).
+        if: ${{ ! contains(needs.get-affected-apis.outputs.deleted, matrix.apifile) }}
+        uses: char0n/swagger-editor-validate@v1
         with:
-          base: 'trunk/specs/bm_petstore.yml'
-          revision: 'head/specs/bm_petstore.yml'
-          fail-on-diff: false
-          format: yaml
-      - name: Run OpenAPI Breaking Change Detection
-        uses: oasdiff/oasdiff-action/breaking@main
+          definition-file: "${{ matrix.apifile }}"
+
+      - name: Changelog Generation
+        # Run only if the file was modified (M)
+        if: ${{ contains(needs.get-affected-apis.outputs.modified, matrix.apifile) }}
+        id: openapi-changelog
+        uses: oasdiff/oasdiff-action/changelog@main
         continue-on-error: true
         with:
-          base: 'trunk/specs/bm_petstore.yml'
-          revision: 'head/specs/bm_petstore.yml'
-      - name: Run OpenAPI Changelog Generation
-        uses: oasdiff/oasdiff-action/changelog@main
+          base: 'trunk/${{ matrix.apifile }}'
+          revision: '${{ matrix.apifile }}'
+
+      - name: Breaking Change Detection
+        # Run only if the file was modified (M)
+        if: ${{ contains(needs.get-affected-apis.outputs.modified, matrix.apifile) }}
+        id: openapi-breaking
+        uses: oasdiff/oasdiff-action/breaking@main
+        # TODO: Later fix that this steps fails and we require a version bump.
+        continue-on-error: true
         with:
-          base: 'trunk/specs/bm_petstore.yml'
-          revision: 'head/specs/bm_petstore.yml'
+          base: 'trunk/${{ matrix.apifile }}'
+          revision: '${{ matrix.apifile }}'
+
+      - name: Report OpenAPI Changelog Findings
+        # Run only if the file was modified (M)
+        if: ${{ contains(needs.get-affected-apis.outputs.modified, matrix.apifile) }}
+        # TODO: Improve the report visuals (step summary) using Markdown.
+        run: |
+          echo "::warning file=${{ matrix.apifile }}::OpenAPI changelog at: https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          echo "${{ join(steps.openapi-changelog.outputs.*,'\n') }}" >> $GITHUB_STEP_SUMMARY
