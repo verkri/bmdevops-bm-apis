@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>hu.bankmonitor.apis</groupId>
   <artifactId>petstore</artifactId>
-  <version>1.0.6</version>
+  <version>${env.API_MAVEN_VERSION}</version>
   <packaging>jar</packaging>
 
   <properties>
