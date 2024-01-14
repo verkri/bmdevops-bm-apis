@@ -10,6 +10,9 @@
 #      - run NOTHING
 #   - api.yml files moved (TBD)
 #      - check that the generated package contents (NPM, Maven) are the same.
+#   - no api.yml file changed/moved/added/deleted (OK)
+#      - run NO openapi jobs
+
 name: Presubmit
 on: 
   pull_request:
@@ -47,7 +50,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [get-affected-apis]
 
-    if: ${{ fromJSON(needs.get-affected-apis.outputs.affected) != "[]" }}
+    if: ${{ fromJSON(needs.get-affected-apis.outputs.affected) != [] }}
 
     strategy:
       fail-fast: false
