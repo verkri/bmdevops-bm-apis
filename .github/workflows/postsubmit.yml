@@ -10,11 +10,10 @@
 # 
 
 name: Postsubmit
-on: workflow_dispatch
-# on: 
-#   push:
-#     branches:
-#       - master
+on:
+  pull_request:
+    branches:
+      - master
 
 env:
   AWS_CODEARTIFACT_REPOSITORY: https://bankmonitor-767398085282.d.codeartifact.us-east-1.amazonaws.com/npm/bm-apis/
