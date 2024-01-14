@@ -33,6 +33,10 @@ jobs:
           escape_json: false
           files: |
              specs/*.yml
+      
+      - name: Debug
+        run: |
+          echo "affected: ${{ steps.changed-files.outputs.all_changed_files }}"
 
     outputs:
       affected: ${{ steps.changed-files.outputs.all_changed_files }}
@@ -40,10 +44,11 @@ jobs:
       modified: ${{ steps.changed-files.outputs.modified_files }}
 
   openapi-check:
-    if: ${{ needs.get-affected-apis.outputs.affected }}
+    runs-on: ubuntu-latest
     needs: [get-affected-apis]
 
-    runs-on: ubuntu-latest
+    if: ${{ fromJSON(needs.get-affected-apis.outputs.affected) != "[]" }}
+
     strategy:
       fail-fast: false
       max-parallel: 4
