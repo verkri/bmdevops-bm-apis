@@ -36,12 +36,12 @@ jobs:
           files: |
              specs/*.yml
 
-      - name: Debug
+      - name: Job Output Debug
         run: |
-          echo "affected: ${{ steps.changed-files.outputs.all_changed_files }}"
-          echo "added: ${{ steps.changed-files.outputs.added_files }}"
-          echo "deleted: ${{ steps.changed-files.outputs.deleted_files }}"
-          echo "modified: ${{ steps.changed-files.outputs.modified_files }}"
+          echo "::debug::get-affected-apis affected: ${{ steps.changed-files.outputs.all_changed_files }}"
+          echo "::debug::get-affected-apis added: ${{ steps.changed-files.outputs.added_files }}"
+          echo "::debug::get-affected-apis deleted: ${{ steps.changed-files.outputs.deleted_files }}"
+          echo "::debug::get-affected-apis modified: ${{ steps.changed-files.outputs.modified_files }}"
 
     outputs:
       affected: ${{ steps.changed-files.outputs.all_changed_files }}
@@ -79,19 +79,21 @@ jobs:
         with:
           definition-file: "${{ matrix.apifile }}"
 
-      - name: OpeanAPI Diff
-        # Run only if the file was modified (M)
-        if: ${{ contains(needs.get-affected-apis.outputs.modified, matrix.apifile) }}
-        uses: oasdiff/oasdiff-action/diff@main
-        with:
-          base: 'trunk/${{ matrix.apifile }}'
-          revision: '${{ matrix.apifile }}'
-          fail-on-diff: false
-          format: yaml
+      # - name: OpeanAPI Diff
+      #   # Run only if the file was modified (M)
+      #   if: ${{ contains(needs.get-affected-apis.outputs.modified, matrix.apifile) }}
+      #   uses: ./github/actions/oasdiff-diff
+      #   # uses: oasdiff/oasdiff-action/diff@main
+      #   with:
+      #     base: 'trunk/${{ matrix.apifile }}'
+      #     revision: '${{ matrix.apifile }}'
+      #     fail-on-diff: false
+      #     format: yaml
 
       - name: Changelog Generation
         # Run only if the file was modified (M)
         if: ${{ contains(needs.get-affected-apis.outputs.modified, matrix.apifile) }}
+        id: openapi-changelog
         uses: oasdiff/oasdiff-action/changelog@main
         continue-on-error: true
         with:
@@ -108,7 +110,8 @@ jobs:
           base: 'trunk/${{ matrix.apifile }}'
           revision: '${{ matrix.apifile }}'
 
-      # - name: Report OpenAPI Findings
-      #   if: ${{ contains(needs.get-affected-apis.outputs.modified, matrix.apifile) }}
-      #   run: |
-      #     echo "::error title=Breaking Changes,file=${{ matrix.apifile }}::There are breaking changes!"
+      - name: Report OpenAPI Findings
+        # if: steps.openapi-changelog.outputs.changelog
+        run: |
+          echo "::warning file=${{ matrix.apifile }}::There are OpenAPI Diffs, check them at: https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          echo ${{steps.openapi-changelog.outputs.changelog}} >> $GITHUB_STEP_SUMMARY
