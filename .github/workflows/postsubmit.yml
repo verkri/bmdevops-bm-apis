@@ -91,6 +91,10 @@ jobs:
           echo "token=$(aws codeartifact get-authorization-token --domain ${AWS_CODEARTIFACT_DOMAIN} --query authorizationToken --output text)" >> "${GITHUB_OUTPUT}"
           cat ${GITHUB_OUTPUT}
 
+      - name: Debug Token
+        run: |
+          echo "auth token: ${{ steps.aws-auth.outputs.token }}"
+
       - name: AWS CodeArtifact Publish
         uses: JS-DevTools/npm-publish@v3
         with:

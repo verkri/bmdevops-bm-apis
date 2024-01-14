@@ -1,0 +1,3 @@
+@bankmonitor:registry=https://bankmonitor-767398085282.d.codeartifact.us-east-1.amazonaws.com/npm/bm-apis/
+//bankmonitor-767398085282.d.codeartifact.us-east-1.amazonaws.com/npm/bm-apis/:always-auth=true
+//bankmonitor-767398085282.d.codeartifact.us-east-1.amazonaws.com/npm/bm-apis/:_authToken=${CODEARTIFACT_AUTH_TOKEN}
