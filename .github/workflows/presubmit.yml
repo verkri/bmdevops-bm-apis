@@ -36,10 +36,6 @@ jobs:
           escape_json: false
           files: |
              specs/*.yml
-      
-      - name: Debug
-        run: |
-          echo "affected: ${{ steps.changed-files.outputs.all_changed_files }}"
 
     outputs:
       affected: ${{ steps.changed-files.outputs.all_changed_files }}
