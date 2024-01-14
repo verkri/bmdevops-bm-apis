@@ -82,12 +82,12 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${AWS_DEFAULT_REGION}
+          aws-region: ${{ env.AWS_DEFAULT_REGION }}
 
       - name: Authenticate to AWS CodeArtifact
         id: aws-auth
         run: |
-          echo "token=$(aws codeartifact get-authorization-token --domain ${AWS_CODEARTIFACT_DOMAIN} --query authorizationToken --output text)" >> "$GITHUB_OUTPUT"
+          echo "token=$(aws codeartifact get-authorization-token --domain ${AWS_CODEARTIFACT_DOMAIN} --query authorizationToken --output text)" >> "${GITHUB_OUTPUT}"
           cat ${GITHUB_OUTPUT}
 
 # # aws codeartifact login --tool npm --repository ${AWS_CODEARTIFACT_REPOSITORY} --domain ${AWS_CODEARTIFACT_DOMAIN}
