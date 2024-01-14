@@ -57,8 +57,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix: 
-        apifile: [ "specs/bm_bugstore.yml", "specs/bm_petstore.yml" ]
-        # TODO: ${{ needs.get-affected-apis.outputs.affected }}
+        # apifile: [ "specs/bm_bugstore.yml", "specs/bm_petstore.yml" ]
+        apifile: ${{ needs.get-affected-apis.outputs.affected }}
 
     steps:
       - name: Check out head branch
@@ -72,23 +72,13 @@ jobs:
           ref: master
           path: trunk
 
-      - name: OpenAPI Validation
-        # Skip validation if the file was deleted.
-        if: ${{ ! contains(needs.get-affected-apis.outputs.deleted, matrix.apifile) }}
-        uses: char0n/swagger-editor-validate@v1
-        with:
-          definition-file: "${{ matrix.apifile }}"
-
-      # - name: OpeanAPI Diff
-      #   # Run only if the file was modified (M)
-      #   if: ${{ contains(needs.get-affected-apis.outputs.modified, matrix.apifile) }}
-      #   uses: ./github/actions/oasdiff-diff
-      #   # uses: oasdiff/oasdiff-action/diff@main
+      # Skip for now to speed up.
+      # - name: OpenAPI Validation
+      #   # Skip validation if the file was deleted.
+      #   if: ${{ ! contains(needs.get-affected-apis.outputs.deleted, matrix.apifile) }}
+      #   uses: char0n/swagger-editor-validate@v1
       #   with:
-      #     base: 'trunk/${{ matrix.apifile }}'
-      #     revision: '${{ matrix.apifile }}'
-      #     fail-on-diff: false
-      #     format: yaml
+      #     definition-file: "${{ matrix.apifile }}"
 
       - name: Changelog Generation
         # Run only if the file was modified (M)
@@ -110,9 +100,10 @@ jobs:
           base: 'trunk/${{ matrix.apifile }}'
           revision: '${{ matrix.apifile }}'
 
-      - name: Report OpenAPI Findings
+      - name: Report OpenAPI Changelog Findings
+        # Run only if the file was modified (M)
         if: ${{ contains(needs.get-affected-apis.outputs.modified, matrix.apifile) }}
-        # if: steps.openapi-changelog.outputs.changelog
+        # TODO: Improve the report visuals using Markdown
         run: |
-          echo "::warning file=${{ matrix.apifile }}::There are OpenAPI Diffs, check them at: https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          echo "::warning file=${{ matrix.apifile }}::OpenAPI changelog at: https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
           echo "${{ join(steps.openapi-changelog.outputs.*,'\n') }}" >> $GITHUB_STEP_SUMMARY
