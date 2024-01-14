@@ -125,6 +125,7 @@ jobs:
         uses: actions/setup-java@v2
         with:
           java-version: "11"
+          distribution: "corretto"
     
       - name: Configure Maven Project
         working-directory: maven
