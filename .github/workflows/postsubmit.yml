@@ -60,40 +60,38 @@ jobs:
       - name: Check out head branch
         uses: actions/checkout@v4
 
-      - name: Prepare dotenv variables
-        run: |
-          echo API_NPM_NAME=bm_petstore >> npm/.env
-          echo API_NPM_VERSION=1.0.7 >> npm/.env
-          echo API_FILEPATH=../specs/bm_petstore.yml >> npm/.env
-          cat npm/.env
-
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
           node-version: "21"
     
       - name: Npm Install
-        run: (cd npm && npm install)
+        run: |
+          cd npm
+          API_NPM_NAME=bm_petstore API_NPM_VERSION=1.0.7 API_FILEPATH=../specs/bm_petstore.yml envsubst < package.json.tmpl > package.json
+          npm install
 
       - name: Generate OpenAPI stubs
-        run: (cd npm && npm run gen)
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${AWS_DEFAULT_REGION}
-
-      - name: Authenticate to AWS CodeArtifact
-        id: aws-auth
         run: |
-          echo "token=$(aws codeartifact get-authorization-token --domain ${AWS_CODEARTIFACT_DOMAIN} --query authorizationToken --output text)" >> "$GITHUB_OUTPUT"
+          cd npm
+          npm run gen
 
-# aws codeartifact login --tool npm --repository ${AWS_CODEARTIFACT_REPOSITORY} --domain ${AWS_CODEARTIFACT_DOMAIN}
+#       - name: Configure AWS credentials
+#         uses: aws-actions/configure-aws-credentials@v1
+#         with:
+#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#           aws-region: ${AWS_DEFAULT_REGION}
 
-      - name: AWS CodeArtifact Publish
-        uses: JS-DevTools/npm-publish@v3
-        with:
-          token: $ {{ steps.aws-auth.outputs.token }}
-          registry: ${AWS_CODEARTIFACT_REPOSITORY}
+#       - name: Authenticate to AWS CodeArtifact
+#         id: aws-auth
+#         run: |
+#           echo "token=$(aws codeartifact get-authorization-token --domain ${AWS_CODEARTIFACT_DOMAIN} --query authorizationToken --output text)" >> "$GITHUB_OUTPUT"
+
+# # aws codeartifact login --tool npm --repository ${AWS_CODEARTIFACT_REPOSITORY} --domain ${AWS_CODEARTIFACT_DOMAIN}
+
+#       - name: AWS CodeArtifact Publish
+#         uses: JS-DevTools/npm-publish@v3
+#         with:
+#           token: $ {{ steps.aws-auth.outputs.token }}
+#           registry: ${AWS_CODEARTIFACT_REPOSITORY}
