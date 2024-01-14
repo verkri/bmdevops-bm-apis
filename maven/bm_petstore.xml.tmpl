@@ -1,12 +1,14 @@
 <project>
   <modelVersion>4.0.0</modelVersion>
   <groupId>hu.bankmonitor.apis</groupId>
-  <artifactId>petstore</artifactId>
-  <version>1.0.6</version>
+  <artifactId>bm_petstore</artifactId>
+  <version>${API_MAVEN_VERSION}</version>
   <packaging>jar</packaging>
 
   <properties>
-    <openapi.input.file>${project.basedir}/api.yml</openapi.input.file>
+    <openapi.input.file>${project.basedir}/${API_FILEPATH}</openapi.input.file>
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
   </properties>
 
   <dependencies>
@@ -36,10 +38,10 @@
     </dependency>
 
     <dependency>
-			<groupId>org.projectlombok</groupId>
-			<artifactId>lombok</artifactId>
-			<version>1.18.30</version>
-		</dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <version>1.18.30</version>
+    </dependency>
 
   </dependencies>
 
@@ -78,7 +80,7 @@
     <repository>
       <id>bankmonitor-bm-apis</id>
       <name>bankmonitor-bm-apis</name>
-      <url>${env.CODEARTIFACT_BASEURL}/maven/bm-apis/</url>
+      <url>https://${AWS_CODEARTIFACT_DOMAIN}-${AWS_CODEARTIFACT_DOMAIN_OWNER}.d.codeartifact.${AWS_CODEARTIFACT_REGION}.amazonaws.com/maven/${AWS_CODEARTIFACT_REPOSITORY}/</url>
     </repository>
   </distributionManagement>
 </project>
