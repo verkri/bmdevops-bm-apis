@@ -57,7 +57,7 @@ jobs:
     #     apifile: ${{ fromJSON(needs.get-affected-apis.outputs.affected) }}
 
     steps:
-      - name: Check out head branch
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Node
@@ -68,7 +68,8 @@ jobs:
       - name: Npm Install
         run: |
           cd npm
-          API_NPM_NAME=bm_petstore API_NPM_VERSION=1.0.7 API_FILEPATH=../specs/bm_petstore.yml envsubst < package.json.tmpl > package.json
+          cp ../specs/bm_petstore.yml .
+          API_NPM_NAME=bm_petstore API_NPM_VERSION=1.0.7 API_FILEPATH=./bm_petstore.yml envsubst < package.json.tmpl > package.json
           cat package.json
           npm install
 
@@ -78,7 +79,7 @@ jobs:
           npm run gen
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -90,10 +91,11 @@ jobs:
           echo "token=$(aws codeartifact get-authorization-token --domain ${AWS_CODEARTIFACT_DOMAIN} --query authorizationToken --output text)" >> "${GITHUB_OUTPUT}"
           cat ${GITHUB_OUTPUT}
 
-# # aws codeartifact login --tool npm --repository ${AWS_CODEARTIFACT_REPOSITORY} --domain ${AWS_CODEARTIFACT_DOMAIN}
-
-#       - name: AWS CodeArtifact Publish
-#         uses: JS-DevTools/npm-publish@v3
-#         with:
-#           token: $ {{ steps.aws-auth.outputs.token }}
-#           registry: ${AWS_CODEARTIFACT_REPOSITORY}
+      - name: AWS CodeArtifact Publish
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          # The package input specifies the workdir under which the package.json is found.
+          # Don't think it denotes the type of packaging...
+          package: npm
+          token: $ {{ steps.aws-auth.outputs.token }}
+          registry: ${{ env.AWS_CODEARTIFACT_REPOSITORY }}
