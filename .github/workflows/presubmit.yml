@@ -66,13 +66,31 @@ jobs:
           ref: master
           path: trunk
 
-      - name: Check OpenAPI version change
+      - name: Lookup master OpenAPI version
+        # Run only if the file was modified (M)
+        if: ${{ contains(needs.get-affected-apis.outputs.modified, matrix.apifile) }}
+        id: openapi-version
         uses: mikefarah/yq@master
         with:
-          cmd: |
-            [ "$(yq '.info.version' ${{ matrix.apifile }})" == "$(yq '.info.version' trunk/${{ matrix.apifile }})" ] && \
-            LINE=$(yq '.info.version | line' ${{ matrix.apifile }}) && \
-            echo "::warning file=${{ matrix.apifile }},line=${LINE},title=Check OpenAPI version::You must change the version field, unless you have added only comments or formatting changes."
+          cmd: yq '.info.version, .info.version | line' '${{ matrix.apifile }}'
+
+      - name: Lookup trunk OpenAPI version
+        # Run only if the file was modified (M)
+        if: ${{ contains(needs.get-affected-apis.outputs.modified, matrix.apifile) }}
+        id: trunk-openapi-version
+        uses: mikefarah/yq@master
+        with:
+          cmd: yq '.info.version, .info.version | line' 'trunk/${{ matrix.apifile }}'
+
+      - name: Check OpenAPI version change
+        # Run only if the file was modified (M)
+        if: ${{ contains(needs.get-affected-apis.outputs.modified, matrix.apifile) }}
+        run: |
+            OPENAPI_V_NEW=$(head -1 "${{ steps.openapi-version.outputs.result }}")
+            OPENAPI_V_TRUNK=$(head -1 "${{ steps.trunk-openapi-version.outputs.result }}")
+            ANNOTATION_LINE=$(tail -1 "${{ steps.openapi-version.outputs.result }}")
+            [ "${OPENAPI_V_NEW}" == "${OPENAPI_V_TRUNK}" ] && \
+            echo "::warning file=${{ matrix.apifile }},line=${ANNOTATION_LINE},title=Check OpenAPI version::You must change the version field, unless you have added only comments or formatting changes."
 
       - name: OpenAPI Validation
         # Skip validation if the file was deleted (D).
