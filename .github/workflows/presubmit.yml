@@ -66,6 +66,14 @@ jobs:
           ref: master
           path: trunk
 
+      - name: Check OpenAPI version change
+        uses: mikefarah/yq@master
+        with:
+          cmd: |
+            [ "$(yq '.info.version' ${{ matrix.apifile }})" == "$(yq '.info.version' trunk/${{ matrix.apifile }})" ] && \
+            LINE=$(yq '.info.version | line' ${{ matrix.apifile }}) && \
+            echo "::warning file=${{ matrix.apifile }},line=${LINE},title=Check OpenAPI version::You must change the version field, unless you have added only comments or formatting changes."
+
       - name: OpenAPI Validation
         # Skip validation if the file was deleted (D).
         if: ${{ ! contains(needs.get-affected-apis.outputs.deleted, matrix.apifile) }}
