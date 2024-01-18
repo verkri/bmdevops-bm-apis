@@ -86,9 +86,9 @@ jobs:
         # Run only if the file was modified (M)
         if: ${{ contains(needs.get-affected-apis.outputs.modified, matrix.apifile) }}
         run: |
-            OPENAPI_V_NEW=$(head -1 "${{ steps.openapi-version.outputs.result }}")
-            OPENAPI_V_TRUNK=$(head -1 "${{ steps.trunk-openapi-version.outputs.result }}")
-            ANNOTATION_LINE=$(tail -1 "${{ steps.openapi-version.outputs.result }}")
+            OPENAPI_V_NEW=$(echo -e "${{ steps.openapi-version.outputs.result }}" | head -1)
+            OPENAPI_V_TRUNK=$(echo -e "${{ steps.trunk-openapi-version.outputs.result }}" | head -1)
+            ANNOTATION_LINE=$(echo -e "${{ steps.openapi-version.outputs.result }}" | tail -1)
             [ "${OPENAPI_V_NEW}" == "${OPENAPI_V_TRUNK}" ] && \
             echo "::warning file=${{ matrix.apifile }},line=${ANNOTATION_LINE},title=Check OpenAPI version::You must change the version field, unless you have added only comments or formatting changes."
 
