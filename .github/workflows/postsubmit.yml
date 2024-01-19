@@ -53,7 +53,7 @@ jobs:
         id: openapi-version
         uses: mikefarah/yq@master
         with:
-          cmd: echo "version=$(yq '.info.version' ${{ matrix.apifile }}) >> "${GITHUB_OUTPUT}"
+          cmd: yq '.info.version' ${{ matrix.apifile }}
 
       - name: Setup Node
         uses: actions/setup-node@v3
@@ -63,7 +63,7 @@ jobs:
       - name: Npm Install
         working-directory: npm
         env:
-          API_NPM_VERSION: ${{ steps.openapi-version.outputs.version }}
+          API_NPM_VERSION: ${{ steps.openapi-version.outputs.result }}
           API_FILEPATH: ../${{ matrix.apifile }}
         run: |
           export API_NPM_NAME=$(basename ${API_FILEPATH%.*})
@@ -116,7 +116,7 @@ jobs:
         id: openapi-version
         uses: mikefarah/yq@master
         with:
-          cmd: echo "version=$(yq '.info.version' ${{ matrix.apifile }}) >> "${GITHUB_OUTPUT}"
+          cmd: yq '.info.version' ${{ matrix.apifile }}
 
       - name: Setup Java and Maven
         uses: actions/setup-java@v2
@@ -127,7 +127,7 @@ jobs:
       - name: Configure Maven Project
         working-directory: maven
         env:
-          API_MAVEN_VERSION: ${{ steps.openapi-version.outputs.version }}
+          API_MAVEN_VERSION: ${{ steps.openapi-version.outputs.result }}
           API_FILEPATH: ../${{ matrix.apifile }}
         run: |
           export API_MAVEN_NAME=$(basename ${API_FILEPATH%.*})
