@@ -4,7 +4,7 @@ servers:
 info:
   description: |-
     Bankmonitor Petstore API definition.
-  version: 1.0.8
+  version: 1.0.9
   title: Bankmonitor Petstore API
   contact:
     email: support.it@bankmonitor.hu
